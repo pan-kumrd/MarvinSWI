@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using MarvinSWI.Dialogs;
 
 namespace MarvinSWI.Dialogs
 {
     [Serializable]
     public class RootDialog : IDialog<object>
     {
-        public Task StartAsync(IDialogContext context)
+        public virtual Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
 
@@ -19,13 +21,30 @@ namespace MarvinSWI.Dialogs
         {
             var activity = await result as Activity;
 
-            // calculate something for us to return
-            int length = (activity.Text ?? string.Empty).Length;
+            if (activity.Text == "Gimme failed builds.")
+            {
+                await context.PostAsync("Getting you failed builds.");
+                context.Call(new FailedBuildDialog(), ResumeAfterNewOrderDialog);
+            }
+            else
+            {
+                // return our reply to the user
+                await context.PostAsync($"You sent {activity.Text}. TResponded by RootDialog");
 
-            // return our reply to the user
-            await context.PostAsync($"You sent {activity.Text} which was {length} characters");
+                context.Wait(MessageReceivedAsync);
+            }
+        }
 
-            context.Wait(MessageReceivedAsync);
+        private async Task ResumeAfterNewOrderDialog(IDialogContext context, IAwaitable<object> result)
+        {
+            // Store the value that NewOrderDialog returned. 
+            // (At this point, new order dialog has finished and returned some value to use within the root dialog.)
+            var resultFromNewOrder = await result;
+
+            await context.PostAsync($"New order dialog just told me this: {resultFromNewOrder}");
+
+            // Again, wait for the next message from the user.
+            context.Wait(this.MessageReceivedAsync);
         }
     }
 }
