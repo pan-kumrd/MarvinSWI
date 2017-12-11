@@ -29,9 +29,6 @@ namespace MarvinSWI.Controllers
 
         FeedReader reader;
         IEnumerable<FeedItem> oldItems;
-        string uri;
-        Timer timer;
-        int tickAmount;
      
         public BuildReportController()
         {
@@ -41,7 +38,8 @@ namespace MarvinSWI.Controllers
         public async void GetBuilds(string uri)
         {
 
-            var items = await Task.Run(() => reader.RetrieveFeed(uri));
+            // var items = await Task.Run(() => reader.RetrieveFeed(uri));
+            var items = reader.RetrieveFeed(uri);
 
             if (oldItems != null)
             {

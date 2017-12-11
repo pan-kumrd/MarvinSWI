@@ -10,41 +10,25 @@ namespace MarvinSWI.Dialogs
     [Serializable]
     public class RootDialog : IDialog<object>
     {
-        public virtual Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
             context.Wait(MessageReceivedAsync);
-
-            return Task.CompletedTask;
         }
 
-        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
-            var activity = await result as Activity;
-
-            if (activity.Text == "Gimme failed builds.")
+            var message = await result;
+            if ((message.Text != null) && (message.Text.ToLower() == "marvin start"))
             {
-                await context.PostAsync("Getting you failed builds.");
-                context.Call(new FailedBuildDialog(), ResumeAfterNewOrderDialog);
+                context.Call(new FailedBuildDialog(), this.FailedBuildDialogResumeAfter);
             }
-            else
-            {
-                // return our reply to the user
-                await context.PostAsync($"You sent {activity.Text}. TResponded by RootDialog");
 
-                context.Wait(MessageReceivedAsync);
-            }
+            context.Done(message.Text);
         }
 
-        private async Task ResumeAfterNewOrderDialog(IDialogContext context, IAwaitable<object> result)
+        private async Task FailedBuildDialogResumeAfter(IDialogContext context, IAwaitable<object> result)
         {
-            // Store the value that NewOrderDialog returned. 
-            // (At this point, new order dialog has finished and returned some value to use within the root dialog.)
-            var resultFromNewOrder = await result;
-
-            await context.PostAsync($"New order dialog just told me this: {resultFromNewOrder}");
-
-            // Again, wait for the next message from the user.
-            context.Wait(this.MessageReceivedAsync);
+            await context.PostAsync("Notifications started");
         }
     }
 }
