@@ -24,9 +24,12 @@ namespace MarvinSWI
             this.activity = activity;
             connector = new ConnectorClient(new Uri(activity.ServiceUrl));
 
-            buildController = new BuildReportController();
-            buildController.RaiseBuildEvent += HandleBuildEvent;
-            buildController.StartGettingBuilds();
+            if (buildController == null)
+            {
+                buildController = new BuildReportController();
+                buildController.RaiseBuildEvent += HandleBuildEvent;
+                buildController.StartGettingBuilds();
+            }
 
             var response = Request.CreateResponse(HttpStatusCode.OK);
             return response;
